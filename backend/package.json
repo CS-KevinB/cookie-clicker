@@ -1,6 +1,5 @@
 {
   "name": "backend",
-  "packageManager": "yarn@4.9.2",
   "dependencies": {
     "@clerk/clerk-sdk-node": "^5.1.6",
     "@prisma/client": "^6.16.1",
