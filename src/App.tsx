@@ -27,7 +27,6 @@ const App: React.FC = () => {
         const data: ServerResponse = await response.json();
 
         if (response.ok) {
-          // Navigate to WelcomePage and pass the server message in state
           navigate(`/welcome/${encodeURIComponent(name)}`, {
             state: { message: data.message },
           });
@@ -44,28 +43,28 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="card">
-      <h1>Welcome to Cookie Clicker!</h1>
+    <div className="app-container">
+      <h1 className="app-title">Welcome to Cookie Clicker!</h1>
 
       <input
+        className="app-input"
         type="text"
         placeholder="Enter your name"
         value={name}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setName(e.target.value)
-        }
+        onChange={(e) => setName(e.target.value)}
       />
 
       <input
+        className="app-input"
         type="password"
         placeholder="Enter your password"
         value={password}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setPassword(e.target.value)
-        }
+        onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button onClick={handleWelcome}>Go</button>
+      <button className="go-button" onClick={handleWelcome}>
+        Go
+      </button>
     </div>
   );
 };

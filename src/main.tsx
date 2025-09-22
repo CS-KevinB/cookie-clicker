@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import WelcomePage from "./WelcomePage";
 import "./index.css";
+import './App.css';
+import './WelcomePage.css';
 
 // Get the root element and assert it's an HTMLElement
 const rootElement = document.getElementById("root") as HTMLElement;
