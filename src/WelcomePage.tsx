@@ -182,7 +182,7 @@ class WelcomePage extends Component<{}, WelcomeState> {
       dragonCookiesPerSecond: 45000,
 
       activeTab: "buildings",
-      activeSecondaryTab: "stats",
+      activeSecondaryTab: "updates",
     };
   }
 
@@ -846,6 +846,44 @@ class WelcomePage extends Component<{}, WelcomeState> {
               Updates
             </button>
           </div>
+          
+          {this.state.activeSecondaryTab === "stats" && (
+            <div className="stats-info">
+              <p>Cookies Per Click: {this.state.cookiesPerClick}</p>
+              <p>Buildings Unlocked:</p>
+              {this.state.totalCursors > 0 && (
+                <p>Cursor</p>
+              )}
+              {this.state.totalGrandmas > 0 && (
+                <p>Grandma</p>
+              )}
+              {this.state.totalPirates > 0 && (
+                <p>Pirate</p>
+              )}
+              {this.state.totalNinjas > 0 && (
+                <p>Ninja</p>
+              )}
+              {this.state.totalWizards > 0 && (
+                <p>Wizard</p>
+              )}
+              {this.state.totalAliens > 0 && (
+                <p>Alien</p>
+              )}
+              {this.state.totalCyborgs > 0 && (
+                <p>Cyborg</p>
+              )}
+              {this.state.totalDragons > 0 && (
+                <p>Dragon</p>
+              )}
+            </div>
+          )}
+
+          {this.state.activeSecondaryTab === "updates" && (
+            <div className="updates-info">
+              <p>Upcoming Updates!</p>
+            </div>
+          )}
+
           {/*logout button*/}
           <button className="logout-button">Logout</button>
         </div>

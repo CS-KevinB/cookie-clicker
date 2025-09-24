@@ -98,22 +98,32 @@ html, body, #root {
   background-color: #4caf50;
 }
 
+.stats-info {
+  margin-top: auto;
+  text-align: center;
+  background-color: #DDB26B;
+  padding: 20px;
+}
+
+.updates-info {
+  margin-top: auto;
+  text-align: center;
+  background-color: #DDB26B;
+  padding: 20px;
+}
+
 /* Logout button styling */
 .logout-button {
   align-self : flex-end;
   margin-top: auto;
-  padding: 10px 20px;
-  font-size: 18px;
-  background-color: #646363;
+  padding: 5px 5px;
+  font-size: 16px;
+  background-color: #1db3f8;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
-
-.logout-button:hover {
-  background-color: #45a049;
 }
 
 /* Items */
