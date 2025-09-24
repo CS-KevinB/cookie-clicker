@@ -17,7 +17,7 @@ html, body {
   justify-content: center;    /* vertical centering */
   width: 100vw;               /* full viewport width */
   height: 100vh;              /* full viewport height */
-  background-color: #464242;
+  background-color: #1db3f8;
 }
 
 /* Landing page title */
@@ -41,7 +41,7 @@ html, body {
 .go-button {
   padding: 10px 20px;
   font-size: 18px;
-  background-color: #af664c;
+  background-color: #4caf50;
   color: #fff;
   border: none;
   border-radius: 5px;

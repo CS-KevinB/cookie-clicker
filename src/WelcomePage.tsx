@@ -88,6 +88,7 @@ interface WelcomeState {
   dragonCookiesPerSecond: number;
 
   activeTab: "buildings" | "upgrades";
+  activeSecondaryTab: "stats" | "updates";
 }
 
 class WelcomePage extends Component<{}, WelcomeState> {
@@ -181,6 +182,7 @@ class WelcomePage extends Component<{}, WelcomeState> {
       dragonCookiesPerSecond: 45000,
 
       activeTab: "buildings",
+      activeSecondaryTab: "stats",
     };
   }
 
@@ -201,7 +203,7 @@ class WelcomePage extends Component<{}, WelcomeState> {
     }));
   };
 
-  // Buildings buy methods (converted to TS with safe casts where needed)
+  // Buildings buy methods
   buyCursor = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.cursorPrice) {
@@ -675,146 +677,183 @@ class WelcomePage extends Component<{}, WelcomeState> {
   };
 
   render() {
-    return (
-      <div className="App">
-        <div className="container">
-          {/* Column 1 */}
-          <div className="column1">
-            {/* Top Section: Welcome Text */}
-            <div className="welcome-text" onMouseDown={(e) => e.preventDefault()}>
-              <h1>Welcome to Cookie Clicker!</h1>
-              <p>Created by Kevin</p>
-            </div>
-
-            {/* Middle Section: Cookie Image */}
-            <div className="image-container">
-              <img src={cookieImage} alt="cookie" className="image" onClick={this.handleCookieClick} />
-            </div>
-
-            {/* Bottom Section: Total Cookies and CPS */}
-            <div className="game-info" onMouseDown={(e) => e.preventDefault()}>
-              <p>Total Cookies:</p>
-              <p>{Math.round(this.state.totalCookies)}</p>
-              <p>Cookies Per Second:</p>
-              <p>{Math.round(this.state.cookiesPerSecond)}</p>
-            </div>
+  return (
+    <div className="App">
+      <div className="container">
+        {/* Column 1 */}
+        <div className="column1">
+          {/* Top Section: Welcome Text */}
+          <div className="welcome-text" onMouseDown={(e) => e.preventDefault()}>
+            <h1>Welcome to Cookie Clicker!</h1>
           </div>
 
-          {/* Divider */}
-          <div className="divider"></div>
+          {/* Middle Section: Cookie Image */}
+          <div className="image-container">
+            <img
+              src={cookieImage}
+              alt="cookie"
+              className="image"
+              onClick={this.handleCookieClick}
+            />
+          </div>
 
-          {/* Column 2 (Empty) */}
-          <div className="column2"></div>
-
-          {/* Divider */}
-          <div className="divider"></div>
-
-          {/* Column 3: Combined Buildings and Upgrades */}
-          <div className="column3">
-            {/* Toggle Button */}
-            <div className="toggle-container">
-              <button
-                className={`toggle-button ${this.state.activeTab === "buildings" ? "active" : ""}`}
-                onClick={() => this.setState({ activeTab: "buildings" })}
-              >
-                Buildings
-              </button>
-              <button
-                className={`toggle-button ${this.state.activeTab === "upgrades" ? "active" : ""}`}
-                onClick={() => this.setState({ activeTab: "upgrades" })}
-              >
-                Upgrades
-              </button>
-            </div>
-
-            {/* Display Buildings or Upgrades */}
-            {this.state.activeTab === "buildings" && (
-              <div className="buildings">
-                {[
-                  { key: "cursor", name: "Cursors", price: "cursorPrice", owned: "totalCursors" },
-                  { key: "grandma", name: "Grandmas", price: "grandmaPrice", owned: "totalGrandmas" },
-                  { key: "pirate", name: "Pirates", price: "piratePrice", owned: "totalPirates" },
-                  { key: "ninja", name: "Ninjas", price: "ninjaPrice", owned: "totalNinjas" },
-                  { key: "wizard", name: "Wizards", price: "wizardPrice", owned: "totalWizards" },
-                  { key: "alien", name: "Aliens", price: "alienPrice", owned: "totalAliens" },
-                  { key: "cyborg", name: "Cyborgs", price: "cyborgPrice", owned: "totalCyborgs" },
-                  { key: "dragon", name: "Dragons", price: "dragonPrice", owned: "totalDragons" },
-                ].map(({ key, name, price, owned }) => {
-                  // cast dynamic accesses to the expected types
-                  const priceVal = this.state[price as keyof WelcomeState] as number;
-                  const ownedVal = this.state[owned as keyof WelcomeState] as number;
-                  return (
-                    <div
-                      key={key}
-                      className="item"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={(e) => this.handleItemClick(e, key)}
-                    >
-                      <p>{name}</p>
-                      <div className="price-container">
-                        <span>{priceVal} </span>
-                        <img src={cookieImage} alt="Cookie" className="inline-icon" />
-                      </div>
-                      <p>Owned: {ownedVal}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {this.state.activeTab === "upgrades" && (
-              <div className="upgrades">
-                {[
-                  { category: "clicker", count: 6 },
-                  { category: "grandma", count: 4 },
-                  { category: "pirate", count: 4 },
-                  { category: "ninja", count: 3 },
-                  { category: "wizard", count: 3 },
-                  { category: "alien", count: 2 },
-                  { category: "cyborg", count: 1 },
-                ].map(({ category, count }) =>
-                  [...Array(count).keys()].map((i) => {
-                    const upgradeNumber = i + 1;
-                    const purchasedKey = `${category}${upgradeNumber}UpgradePurchased` as keyof WelcomeState;
-                    const priceKey = `${category}${upgradeNumber}UpgradePrice` as keyof WelcomeState;
-                    const upgradePurchased = this.state[purchasedKey] as boolean;
-                    const upgradePrice = this.state[priceKey] as number;
-                    const prevPurchasedKey =
-                      upgradeNumber === 1 ? null : (`${category}${upgradeNumber - 1}UpgradePurchased` as keyof WelcomeState);
-                    const previousUpgradePurchased = upgradeNumber === 1 || (prevPurchasedKey ? (this.state[prevPurchasedKey] as boolean) : false);
-
-                    if (!upgradePurchased && previousUpgradePurchased) {
-                      const methodName = `buy${category.charAt(0).toUpperCase() + category.slice(1)}${upgradeNumber}Upgrade`;
-                      // call method by name; TS doesn't like dynamic indexing, cast to any to preserve behaviour
-                      const handler = (this as any)[methodName] as ((e: React.MouseEvent) => void) | undefined;
-                      return (
-                        <div
-                          className="item"
-                          key={`${category}-${upgradeNumber}`}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={handler ? handler : undefined}
-                        >
-                          <p>
-                            {category.charAt(0).toUpperCase() + category.slice(1)} {upgradeNumber}
-                          </p>
-                          <div className="price-container">
-                            <span>{upgradePrice} </span>
-                            <img src={cookieImage} alt="Cookie" className="inline-icon" />
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return null;
-                  })
-                )}
-              </div>
-            )}
+          {/* Bottom Section: Total Cookies and CPS */}
+          <div className="game-info" onMouseDown={(e) => e.preventDefault()}>
+            <p>Total Cookies:</p>
+            <p>{Math.round(this.state.totalCookies)}</p>
+            <p>Cookies Per Second:</p>
+            <p>{Math.round(this.state.cookiesPerSecond)}</p>
           </div>
         </div>
+
+        {/* Divider */}
+        <div className="divider"></div>
+
+        {/* Column 2: Combined Buildings and Upgrades */}
+        <div className="column2">
+          {/* Toggle Button */}
+          <div className="toggle-container">
+            <button
+              className={`toggle-button ${
+                this.state.activeTab === "buildings" ? "active" : ""
+              }`}
+              onClick={() => this.setState({ activeTab: "buildings" })}
+            >
+              Buildings
+            </button>
+            <button
+              className={`toggle-button ${
+                this.state.activeTab === "upgrades" ? "active" : ""
+              }`}
+              onClick={() => this.setState({ activeTab: "upgrades" })}
+            >
+              Upgrades
+            </button>
+          </div>
+
+          {/* Display Buildings or Upgrades */}
+          {this.state.activeTab === "buildings" && (
+            <div className="buildings">
+              {[
+                { key: "cursor", name: "Cursors", price: "cursorPrice", owned: "totalCursors" },
+                { key: "grandma", name: "Grandmas", price: "grandmaPrice", owned: "totalGrandmas" },
+                { key: "pirate", name: "Pirates", price: "piratePrice", owned: "totalPirates" },
+                { key: "ninja", name: "Ninjas", price: "ninjaPrice", owned: "totalNinjas" },
+                { key: "wizard", name: "Wizards", price: "wizardPrice", owned: "totalWizards" },
+                { key: "alien", name: "Aliens", price: "alienPrice", owned: "totalAliens" },
+                { key: "cyborg", name: "Cyborgs", price: "cyborgPrice", owned: "totalCyborgs" },
+                { key: "dragon", name: "Dragons", price: "dragonPrice", owned: "totalDragons" },
+              ].map(({ key, name, price, owned }) => {
+                const priceVal = this.state[price as keyof WelcomeState] as number;
+                const ownedVal = this.state[owned as keyof WelcomeState] as number;
+                return (
+                  <div
+                    key={key}
+                    className="item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => this.handleItemClick(e, key)}
+                  >
+                    <p>{name}</p>
+                    <div className="price-container">
+                      <span>{priceVal} </span>
+                      <img src={cookieImage} alt="Cookie" className="inline-icon" />
+                    </div>
+                    <p>Owned: {ownedVal}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {this.state.activeTab === "upgrades" && (
+            <div className="upgrades">
+              {[
+                { category: "clicker", count: 6 },
+                { category: "grandma", count: 4 },
+                { category: "pirate", count: 4 },
+                { category: "ninja", count: 3 },
+                { category: "wizard", count: 3 },
+                { category: "alien", count: 2 },
+                { category: "cyborg", count: 1 },
+              ].map(({ category, count }) =>
+                [...Array(count).keys()].map((i) => {
+                  const upgradeNumber = i + 1;
+                  const purchasedKey = `${category}${upgradeNumber}UpgradePurchased` as keyof WelcomeState;
+                  const priceKey = `${category}${upgradeNumber}UpgradePrice` as keyof WelcomeState;
+                  const upgradePurchased = this.state[purchasedKey] as boolean;
+                  const upgradePrice = this.state[priceKey] as number;
+                  const prevPurchasedKey =
+                    upgradeNumber === 1
+                      ? null
+                      : (`${category}${upgradeNumber - 1}UpgradePurchased` as keyof WelcomeState);
+                  const previousUpgradePurchased =
+                    upgradeNumber === 1 ||
+                    (prevPurchasedKey ? (this.state[prevPurchasedKey] as boolean) : false);
+
+                  if (!upgradePurchased && previousUpgradePurchased) {
+                    const methodName = `buy${
+                      category.charAt(0).toUpperCase() + category.slice(1)
+                    }${upgradeNumber}Upgrade`;
+                    const handler = (this as any)[methodName] as
+                      | ((e: React.MouseEvent) => void)
+                      | undefined;
+                    return (
+                      <div
+                        className="item"
+                        key={`${category}-${upgradeNumber}`}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={handler ? handler : undefined}
+                      >
+                        <p>
+                          {category.charAt(0).toUpperCase() + category.slice(1)} {upgradeNumber}
+                        </p>
+                        <div className="price-container">
+                          <span>{upgradePrice} </span>
+                          <img src={cookieImage} alt="Cookie" className="inline-icon" />
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="divider"></div>
+
+        {/* Column 3: Stats and Updates */}
+        <div className="column3">
+          {/*toggle button*/}
+          <div className="toggle-container">
+            <button
+              className={`toggle-button ${
+                this.state.activeSecondaryTab === "stats" ? "active" : ""
+              }`}
+              onClick={() => this.setState({ activeSecondaryTab: "stats" })}
+            >
+              Stats
+            </button>
+            <button
+              className={`toggle-button ${
+                this.state.activeSecondaryTab === "updates" ? "active" : ""
+              }`}
+              onClick={() => this.setState({ activeSecondaryTab: "updates" })}
+            >
+              Updates
+            </button>
+          </div>
+          {/*logout button*/}
+          <button className="logout-button">Logout</button>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
+}
+
 
 export default WelcomePage;

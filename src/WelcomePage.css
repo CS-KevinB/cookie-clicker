@@ -48,7 +48,8 @@ html, body, #root {
 /* Welcome text */
 .welcome-text {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 1px;
+  font-size: 12px;
 }
 
 /* Cookie image */
@@ -57,7 +58,7 @@ html, body, #root {
   display: flex;
   justify-content: center;
   align-items: center;  /* vertically center the cookie */
-  width: 100%;
+  width: 90%;
 }
 
 .image {
@@ -70,7 +71,7 @@ html, body, #root {
 /* Total Cookies / Stats */
 .game-info {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 5px;
   font-size: 18px;
 }
 
@@ -85,7 +86,7 @@ html, body, #root {
   padding: 10px 20px;
   margin: 0 5px;
   cursor: pointer;
-  background-color: #333;
+  background-color: #646363;
   color: white;
   border: none;
   border-radius: 5px;
@@ -95,6 +96,24 @@ html, body, #root {
 .toggle-button.active,
 .toggle-button:hover {
   background-color: #4caf50;
+}
+
+/* Logout button styling */
+.logout-button {
+  align-self : flex-end;
+  margin-top: auto;
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #646363;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #45a049;
 }
 
 /* Items */
