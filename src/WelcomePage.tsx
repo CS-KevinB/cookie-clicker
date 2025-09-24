@@ -1,6 +1,12 @@
 import React, { Component } from "react";
+import { NavigateFunction } from "react-router-dom";
 import "./WelcomePage.css"; // use your cookie-clicker CSS for the welcome page
 const cookieImage = "/cookie.png"; // public folder (Vite) — change if you keep it elsewhere
+
+interface WelcomePageProps {
+  navigate: NavigateFunction;
+  name?: string;
+}
 
 // Full typed state that exactly matches your original JS state keys and values
 interface WelcomeState {
@@ -91,11 +97,11 @@ interface WelcomeState {
   activeSecondaryTab: "stats" | "updates";
 }
 
-class WelcomePage extends Component<{}, WelcomeState> {
+class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
   // environment-safe interval type
   private interval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(props: {}) {
+  constructor(props: WelcomePageProps) {
     super(props);
     this.state = {
       totalCookies: 0,
@@ -184,6 +190,10 @@ class WelcomePage extends Component<{}, WelcomeState> {
       activeTab: "buildings",
       activeSecondaryTab: "updates",
     };
+  }
+
+  handleLogout = () => {
+    this.props.navigate("/", {replace: true});
   }
 
   // keep the same lifecycle behavior
@@ -885,7 +895,7 @@ class WelcomePage extends Component<{}, WelcomeState> {
           )}
 
           {/*logout button*/}
-          <button className="logout-button">Logout</button>
+          <button className="logout-button" onClick={this.handleLogout}>Logout</button>
         </div>
       </div>
     </div>

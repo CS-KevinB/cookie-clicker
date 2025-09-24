@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
-import WelcomePage from "./WelcomePage";
+import WelcomePageWrapper from "./WelcomePageWrapper";
 import "./index.css";
 import './App.css';
 import './WelcomePage.css';
@@ -19,7 +19,7 @@ ReactDOM.createRoot(rootElement).render(
         <Route path="/" element={<App />} />
 
         {/* Dynamic route with a "name" parameter → shows the WelcomePage */}
-        <Route path="/welcome/:name" element={<WelcomePage />} />
+        <Route path="/welcome/:name" element={<WelcomePageWrapper />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
