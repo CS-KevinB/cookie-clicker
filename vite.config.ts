@@ -1,4 +1,3 @@
-// vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -9,8 +8,11 @@ export default defineConfig({
     port: 5173,
     open: true,
     watch: {
-      usePolling: true,   // Force polling to detect changes
-      interval: 100,      // Check every 100ms
+      usePolling: true,
+      interval: 100,
+    },
+    proxy: {
+      '/api': 'http://localhost:4000', // forward API requests to backend
     },
   },
   resolve: {
