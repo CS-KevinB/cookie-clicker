@@ -891,6 +891,7 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
           {this.state.activeSecondaryTab === "updates" && (
             <div className="updates-info">
               <p>Upcoming Updates!</p>
+              <p>Storing all your data even when you logout!</p>
             </div>
           )}
 
