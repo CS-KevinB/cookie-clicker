@@ -192,26 +192,60 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
     };
   }
 
-  handleLogout = () => {
-    this.props.navigate("/", {replace: true});
-  }
+  private getTotalCookies = async () => {
+  const { name } = this.props;
+  if (!name) return;
 
-  // keep the same lifecycle behavior
-  componentDidMount() {
-    this.interval = setInterval(this.updateCookiesPerSecond, 1000);
-    this.setState({ activeTab: "buildings" });
-  }
-
-  componentWillUnmount() {
-    if (this.interval) clearInterval(this.interval);
-  }
-
-  // exactly same logic as original
-  handleCookieClick = () => {
-    this.setState((prevState) => ({
-      totalCookies: prevState.totalCookies + prevState.cookiesPerClick,
+  try {
+    const res = await fetch(`http://localhost:4000/api/users/${name}/cookies`);
+    if (!res.ok) throw new Error("Failed to fetch cookies");
+    const data = await res.json();
+    console.log("Fetched cookies:", data);
+    this.setState(prevState =>({
+      ...prevState,
+      totalCookies: data.totalCookies
     }));
-  };
+  } catch (err) {
+    console.error("Failed to load total cookies:", err);
+  }
+};
+
+private updateTotalCookies = async () => {
+  const { name } = this.props;
+  if (!name) return;
+
+  try {
+    await fetch(`http://localhost:4000/api/users/${name}/cookies`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ totalCookies: this.state.totalCookies }),
+    });
+  } catch (err) {
+    console.error("Failed to save total cookies:", err);
+  }
+};
+
+handleLogout = async () => {
+  await this.updateTotalCookies();
+  this.props.navigate("/", { replace: true });
+};
+
+componentDidMount() {
+  this.interval = setInterval(this.updateCookiesPerSecond, 1000);
+  this.setState({ activeTab: "buildings" });
+  this.getTotalCookies();
+}
+
+componentWillUnmount() {
+  if (this.interval) clearInterval(this.interval);
+}
+
+handleCookieClick = () => {
+  this.setState((prevState) => ({
+    totalCookies: prevState.totalCookies + prevState.cookiesPerClick,
+  }));
+};
+
 
   // Buildings buy methods
   buyCursor = (e: React.MouseEvent) => {
@@ -661,7 +695,9 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
   updateCookiesPerSecond = () => {
     this.setState((prevState) => ({
       totalCookies: prevState.totalCookies + prevState.cookiesPerSecond,
-    }));
+    }),
+  this.updateTotalCookies
+);
   };
 
   // method to handle clicking items (mirrors original)
