@@ -12,3 +12,7 @@ You may have to install quite a few dependencies to get this project running in 
 Updating Database
 ex: npx prisma migrate dev -- name add-cookiesPerSecond
 npx prisma generate
+
+## Latest Updates
+- Added saved memory for buildings when logging out
+- Loads buildings and cookies from memory when logging in
