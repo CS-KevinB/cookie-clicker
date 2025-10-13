@@ -96,6 +96,82 @@ app.patch("/api/users/:name/cookies", async (req: Request, res: Response) => {
   }
 });
 
+// Get buildings
+app.get("/api/users/:name/buildings", async (req: Request, res: Response) => {
+  const { name } = req.params;
+
+  try {
+    const buildings = await prisma.building.findMany({
+      where: { user: { username: name } },
+    });
+
+    res.json(buildings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch buildings" });
+  }
+});
+
+
+app.patch("/api/users/:name/buildings", async (req: Request, res: Response) => {
+  const { name } = req.params;
+  const body = req.body as {
+    buildings: Array<{
+      type: string;
+      amount: number;
+      purchased: boolean;
+      basePrice: number;
+      baseRate: number;
+    }>;
+  };
+
+  if (!name || !body.buildings) {
+    return res.status(400).json({ error: "Name and buildings required" });
+  }
+
+  try {
+    // Get the user ID from the username first
+    const user = await prisma.user.findUnique({
+      where: { username: name },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update or create buildings per user + type combo
+    const updatedBuildings = await Promise.all(
+      body.buildings.map((b) =>
+        prisma.building.upsert({
+          where: {
+            userId_type: { userId: user.id, type: b.type },
+          },
+          update: {
+            amount: b.amount,
+            purchased: b.purchased,
+            basePrice: b.basePrice, // updates price each time (*1.17 logic from frontend)
+          },
+          create: {
+            userId: user.id,
+            type: b.type,
+            amount: b.amount,
+            purchased: b.purchased,
+            basePrice: b.basePrice,
+            baseRate: b.baseRate,
+          },
+        })
+      )
+    );
+
+    res.json(updatedBuildings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to upsert buildings" });
+  }
+});
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);

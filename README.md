@@ -11,3 +11,7 @@ To run the app locally, clone the repository using `git clone https://github.com
 
 ## Notes
 You may have to install quite a few dependencies to get this project running in local development. I reccomend using the app with vercel with the link mentioned above.
+
+Updating Database
+ex: npx prisma migrate dev -- name add-cookiesPerSecond
+npx prisma generate

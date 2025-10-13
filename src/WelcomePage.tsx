@@ -13,6 +13,14 @@ interface WelcomeState {
   totalCookies: number;
   cookiesPerClick: number;
   cookiesPerSecond: number;
+  buildings: Array<{
+    id?: number;
+    type: string;
+    amount: number;
+    basePrice: number;
+    baseRate: number;
+    purchased: boolean;
+  }>;
 
   totalCursors: number;
   totalGrandmas: number;
@@ -85,6 +93,7 @@ interface WelcomeState {
   cyborg1UpgradePurchased: boolean;
   cyborg1UpgradePrice: number;
 
+  cursorCookiesPerSecond: number;
   grandmaCookiesPerSecond: number;
   pirateCookiesPerSecond: number;
   ninjaCookiesPerSecond: number;
@@ -107,6 +116,7 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
       totalCookies: 0,
       cookiesPerClick: 1,
       cookiesPerSecond: 0,
+      buildings: [],
 
       totalCursors: 0,
       totalGrandmas: 0,
@@ -179,6 +189,7 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
       cyborg1UpgradePurchased: false,
       cyborg1UpgradePrice: 200000000,
 
+      cursorCookiesPerSecond: 0.2,
       grandmaCookiesPerSecond: 1,
       pirateCookiesPerSecond: 7,
       ninjaCookiesPerSecond: 48,
@@ -192,7 +203,7 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
     };
   }
 
-  private getTotalCookies = async () => {
+  private getTotalCookiesMemory = async () => {
   const { name } = this.props;
   if (!name) return;
 
@@ -210,7 +221,7 @@ class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
   }
 };
 
-private updateTotalCookies = async () => {
+private updateTotalCookiesMemory = async () => {
   const { name } = this.props;
   if (!name) return;
 
@@ -225,15 +236,99 @@ private updateTotalCookies = async () => {
   }
 };
 
+private getBuildingsMemory = async () => {
+  const { name } = this.props;
+  if (!name) return;
+
+  try {
+    const res = await fetch(`http://localhost:4000/api/users/${name}/buildings`);
+    if (!res.ok) throw new Error("Failed to fetch buildings");
+    const data = await res.json();
+
+    // Calculate total cookies per second
+    const cookiesPerSecond = data.reduce((sum: number, b: any) => sum + b.amount * b.baseRate, 0);
+
+    // Prepare new state object
+    const newState: Partial<WelcomeState> = {
+      buildings: data,
+      cookiesPerSecond,
+    };
+
+    // Map each building type to its state keys
+    const totalMap: Record<string, keyof WelcomeState> = {
+      cursor: "totalCursors",
+      grandma: "totalGrandmas",
+      pirate: "totalPirates",
+      ninja: "totalNinjas",
+      wizard: "totalWizards",
+      alien: "totalAliens",
+      cyborg: "totalCyborgs",
+      dragon: "totalDragons",
+    };
+
+    const priceMap: Record<string, keyof WelcomeState> = {
+      cursor: "cursorPrice",
+      grandma: "grandmaPrice",
+      pirate: "piratePrice",
+      ninja: "ninjaPrice",
+      wizard: "wizardPrice",
+      alien: "alienPrice",
+      cyborg: "cyborgPrice",
+      dragon: "dragonPrice",
+    };
+
+    const rateMap: Record<string, keyof WelcomeState> = {
+      cursor: "cursorCookiesPerSecond",
+      grandma: "grandmaCookiesPerSecond",
+      pirate: "pirateCookiesPerSecond",
+      ninja: "ninjaCookiesPerSecond",
+      wizard: "wizardCookiesPerSecond",
+      alien: "alienCookiesPerSecond",
+      cyborg: "cyborgCookiesPerSecond",
+      dragon: "dragonCookiesPerSecond",
+    };
+
+    // Update totals, prices, and cps per building
+    data.forEach((b: any) => {
+      const type = b.type.toLowerCase();
+      if (totalMap[type]) newState[totalMap[type]] = b.amount;
+      if (priceMap[type]) newState[priceMap[type]] = b.basePrice;
+      if (rateMap[type]) newState[rateMap[type]] = b.baseRate;
+    });
+
+    this.setState(newState as WelcomeState);
+  } catch (err) {
+    console.error("Failed to load buildings:", err);
+  }
+};
+
+
+private updateBuildingsMemory = async () => {
+  const { name } = this.props;
+  if (!name || !this.state.buildings) return;
+
+  try {
+    await fetch(`http://localhost:4000/api/users/${name}/buildings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ buildings: this.state.buildings }),
+    });
+  } catch (err) {
+    console.error("Failed to save buildings:", err);
+  }
+};
+
 handleLogout = async () => {
-  await this.updateTotalCookies();
+  await this.updateTotalCookiesMemory();
+  await this.updateBuildingsMemory();
   this.props.navigate("/", { replace: true });
 };
 
 componentDidMount() {
   this.interval = setInterval(this.updateCookiesPerSecond, 1000);
   this.setState({ activeTab: "buildings" });
-  this.getTotalCookies();
+  this.getTotalCookiesMemory();
+  this.getBuildingsMemory();
 }
 
 componentWillUnmount() {
@@ -248,125 +343,368 @@ handleCookieClick = () => {
 
 
   // Buildings buy methods
-  buyCursor = (e: React.MouseEvent) => {
+  buyCursor = async (e: React.MouseEvent) => {
+  e.preventDefault();
+  const { totalCookies, cursorPrice, cursorCookiesPerSecond, buildings } = this.state;
+
+  if (totalCookies < cursorPrice) return;
+
+  // Find existing cursor building
+  const existing = buildings.find((b) => b.type === "cursor");
+
+  let updatedBuildings;
+  let newAmount = 1;
+
+  if (existing) {
+    newAmount = existing.amount + 1;
+
+    // Update building: increment amount and set next basePrice
+    updatedBuildings = buildings.map((b) =>
+      b.type === "cursor"
+        ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(cursorPrice * 1.17) }
+        : b
+    );
+  } else {
+    // First cursor purchase
+    updatedBuildings = [
+      ...buildings,
+      {
+        type: "cursor",
+        amount: 1,
+        purchased: true,
+        basePrice: Math.round(cursorPrice * 1.17), // store next price immediately
+        baseRate: cursorCookiesPerSecond,
+      },
+    ];
+  }
+
+  // Update state
+  this.setState(
+    (prevState) => ({
+      totalCursors: prevState.totalCursors + 1,
+      totalCookies: prevState.totalCookies - cursorPrice,
+      cookiesPerSecond: prevState.cookiesPerSecond + cursorCookiesPerSecond,
+      cursorPrice: Math.round(cursorPrice * 1.17), // update UI to next price
+      buildings: updatedBuildings,
+    }),
+    this.updateBuildingsMemory // save cumulative state to Prisma
+  );
+};
+
+
+  buyGrandma = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.cursorPrice) {
-      const newCursorPrice = Math.round(this.state.cursorPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalCursors: prevState.totalCursors + 1,
-          totalCookies: prevState.totalCookies - prevState.cursorPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + 0.2,
-          cursorPrice: newCursorPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, grandmaPrice, grandmaCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < grandmaPrice) return;
+
+    const existing = buildings.find((b) => b.type === "grandma");
+
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+
+      // Update building: increment amount and set next basePrice
+      updatedBuildings = buildings.map((b) =>
+        b.type === "grandma"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(grandmaPrice * 1.17) }
+          : b
       );
+    } else {
+      // First grandma purchase
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "grandma",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(grandmaPrice * 1.17), // store next price immediately
+          baseRate: grandmaCookiesPerSecond,
+        },
+      ];
     }
+
+    // Update state
+    this.setState(
+      (prevState) => ({
+        totalGrandmas: prevState.totalGrandmas + 1,
+        totalCookies: prevState.totalCookies - grandmaPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + grandmaCookiesPerSecond,
+        grandmaPrice: Math.round(grandmaPrice * 1.17), // update UI to next price
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory // save cumulative state to Prisma
+    );
   };
 
-  buyGrandma = (e: React.MouseEvent) => {
+  buyPirate = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.grandmaPrice) {
-      const newGrandmaPrice = Math.round(this.state.grandmaPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalGrandmas: prevState.totalGrandmas + 1,
-          totalCookies: prevState.totalCookies - prevState.grandmaPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.grandmaCookiesPerSecond,
-          grandmaPrice: newGrandmaPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, piratePrice, pirateCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < piratePrice) return;
+
+    const existing = buildings.find((b) => b.type === "pirate");
+
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+
+      // Update building: increment amount and set next basePrice
+      updatedBuildings = buildings.map((b) =>
+        b.type === "pirate"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(piratePrice * 1.17) }
+          : b
       );
+    } else {
+      // First pirate purchase
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "pirate",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(piratePrice * 1.17), // store next price immediately
+          baseRate: pirateCookiesPerSecond,
+        },
+      ];
     }
+
+    // Update state
+    this.setState(
+      (prevState) => ({
+        totalPirates: prevState.totalPirates + 1,
+        totalCookies: prevState.totalCookies - piratePrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + pirateCookiesPerSecond,
+        piratePrice: Math.round(piratePrice * 1.17), // update UI to next price
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory // save cumulative state to Prisma
+    );
   };
 
-  buyPirate = (e: React.MouseEvent) => {
+  buyNinja = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.piratePrice) {
-      const newPiratePrice = Math.round(this.state.piratePrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalPirates: prevState.totalPirates + 1,
-          totalCookies: prevState.totalCookies - prevState.piratePrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.pirateCookiesPerSecond,
-          piratePrice: newPiratePrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, ninjaPrice, ninjaCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < ninjaPrice) return;
+
+    const existing = buildings.find((b) => b.type === "ninja");
+
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+
+      // Update building: increment amount and set next basePrice
+      updatedBuildings = buildings.map((b) =>
+        b.type === "ninja"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(ninjaPrice * 1.17) }
+          : b
       );
+    } else {
+      // First ninja purchase
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "ninja",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(ninjaPrice * 1.17), // store next price immediately
+          baseRate: ninjaCookiesPerSecond,
+        },
+      ];
     }
+
+    // Update state
+    this.setState(
+      (prevState) => ({
+        totalNinjas: prevState.totalNinjas + 1,
+        totalCookies: prevState.totalCookies - ninjaPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + ninjaCookiesPerSecond,
+        ninjaPrice: Math.round(ninjaPrice * 1.17), // update UI to next price
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory // save cumulative state to Prisma
+    );
   };
 
-  buyNinja = (e: React.MouseEvent) => {
+
+  buyWizard = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.ninjaPrice) {
-      const newNinjaPrice = Math.round(this.state.ninjaPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalNinjas: prevState.totalNinjas + 1,
-          totalCookies: prevState.totalCookies - prevState.ninjaPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.ninjaCookiesPerSecond,
-          ninjaPrice: newNinjaPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+
+    const { totalCookies, wizardPrice, wizardCookiesPerSecond, buildings } = this.state;
+    
+    if (totalCookies < wizardPrice) return;
+
+    const existing = buildings.find((b) => b.type === "wizard");
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+      // Update building: increment amount and set next basePrice
+      updatedBuildings = buildings.map((b) =>
+        b.type === "wizard"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(wizardPrice * 1.17) }
+          : b
       );
+    } else {
+      // First wizard purchase
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "wizard",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(wizardPrice * 1.17), // store next price immediately
+          baseRate: wizardCookiesPerSecond,
+        },
+      ];
     }
+    // Update state
+    this.setState(
+      (prevState) => ({
+        totalWizards: prevState.totalWizards + 1,
+        totalCookies: prevState.totalCookies - wizardPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + wizardCookiesPerSecond,
+        wizardPrice: Math.round(wizardPrice * 1.17), // update UI to next price
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory // save cumulative state to Prisma
+    );
   };
 
-  buyWizard = (e: React.MouseEvent) => {
+  buyAlien = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.wizardPrice) {
-      const newWizardPrice = Math.round(this.state.wizardPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalWizards: prevState.totalWizards + 1,
-          totalCookies: prevState.totalCookies - prevState.wizardPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.wizardCookiesPerSecond,
-          wizardPrice: newWizardPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, alienPrice, alienCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < alienPrice) return;
+
+    const existing = buildings.find((b) => b.type === "alien");
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+      updatedBuildings = buildings.map((b) =>
+        b.type === "alien"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(alienPrice * 1.17) }
+          : b
       );
+    } else {
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "alien",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(alienPrice * 1.17),
+          baseRate: alienCookiesPerSecond,
+        },
+      ];
     }
+
+    this.setState(
+      (prevState) => ({
+        totalAliens: prevState.totalAliens + 1,
+        totalCookies: prevState.totalCookies - alienPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + alienCookiesPerSecond,
+        alienPrice: Math.round(alienPrice * 1.17),
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory
+    );
   };
 
-  buyAlien = (e: React.MouseEvent) => {
+  buyCyborg = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.alienPrice) {
-      const newAlienPrice = Math.round(this.state.alienPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalAliens: prevState.totalAliens + 1,
-          totalCookies: prevState.totalCookies - prevState.alienPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.alienCookiesPerSecond,
-          alienPrice: newAlienPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, cyborgPrice, cyborgCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < cyborgPrice) return;
+
+    const existing = buildings.find((b) => b.type === "cyborg");
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+      updatedBuildings = buildings.map((b) =>
+        b.type === "cyborg"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(cyborgPrice * 1.17) }
+          : b
       );
+    } else {
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "cyborg",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(cyborgPrice * 1.17),
+          baseRate: cyborgCookiesPerSecond,
+        },
+      ];
     }
+
+    this.setState(
+      (prevState) => ({
+        totalCyborgs: prevState.totalCyborgs + 1,
+        totalCookies: prevState.totalCookies - cyborgPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + cyborgCookiesPerSecond,
+        cyborgPrice: Math.round(cyborgPrice * 1.17),
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory
+    );
   };
 
-  buyCyborg = (e: React.MouseEvent) => {
+  buyDragon = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (this.state.totalCookies >= this.state.cyborgPrice) {
-      const newCyborgPrice = Math.round(this.state.cyborgPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalCyborgs: prevState.totalCyborgs + 1,
-          totalCookies: prevState.totalCookies - prevState.cyborgPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.cyborgCookiesPerSecond,
-          cyborgPrice: newCyborgPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
+    const { totalCookies, dragonPrice, dragonCookiesPerSecond, buildings } = this.state;
+
+    if (totalCookies < dragonPrice) return;
+
+    const existing = buildings.find((b) => b.type === "dragon");
+    let updatedBuildings;
+    let newAmount = 1;
+
+    if (existing) {
+      newAmount = existing.amount + 1;
+      updatedBuildings = buildings.map((b) =>
+        b.type === "dragon"
+          ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(dragonPrice * 1.17) }
+          : b
       );
+    } else {
+      updatedBuildings = [
+        ...buildings,
+        {
+          type: "dragon",
+          amount: 1,
+          purchased: true,
+          basePrice: Math.round(dragonPrice * 1.17),
+          baseRate: dragonCookiesPerSecond,
+        },
+      ];
     }
+
+    this.setState(
+      (prevState) => ({
+        totalDragons: prevState.totalDragons + 1,
+        totalCookies: prevState.totalCookies - dragonPrice,
+        cookiesPerSecond: prevState.cookiesPerSecond + dragonCookiesPerSecond,
+        dragonPrice: Math.round(dragonPrice * 1.17),
+        buildings: updatedBuildings,
+      }),
+      this.updateBuildingsMemory
+    );
   };
 
-  buyDragon = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (this.state.totalCookies >= this.state.dragonPrice) {
-      const newDragonPrice = Math.round(this.state.dragonPrice * 1.17);
-      this.setState((prevState) =>
-        ({
-          totalDragons: prevState.totalDragons + 1,
-          totalCookies: prevState.totalCookies - prevState.dragonPrice,
-          cookiesPerSecond: prevState.cookiesPerSecond + prevState.dragonCookiesPerSecond,
-          dragonPrice: newDragonPrice,
-        } as unknown as Pick<WelcomeState, keyof WelcomeState>)
-      );
-    }
-  };
 
   // ---- Upgrades (clicker) ----
   buyClicker1Upgrade = (e: React.MouseEvent) => {
@@ -696,7 +1034,7 @@ handleCookieClick = () => {
     this.setState((prevState) => ({
       totalCookies: prevState.totalCookies + prevState.cookiesPerSecond,
     }),
-  this.updateTotalCookies
+  this.updateTotalCookiesMemory
 );
   };
 
@@ -926,8 +1264,10 @@ handleCookieClick = () => {
 
           {this.state.activeSecondaryTab === "updates" && (
             <div className="updates-info">
+              <p>Latest Updates!</p>
+              <p>Building progress now stored in memory even when you log out!</p>
               <p>Upcoming Updates!</p>
-              <p>Storing all your data even when you logout!</p>
+              <p>Storing all your upgrades even when you log out!</p>
             </div>
           )}
 

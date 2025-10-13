@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "cookiesPerSecond" DOUBLE PRECISION NOT NULL DEFAULT 0;
