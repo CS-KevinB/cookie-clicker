@@ -1,33 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./App.css";
-
-// Optional: define interface for the server response
+import "./App.css"; 
 interface ServerResponse {
   message?: string;
   error?: string;
 }
 
 const App: React.FC = () => {
-  const [name, setName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const navigate = useNavigate();
 
-  const handleWelcome = async () => {
-    if (name.trim() && password.trim()) {
+  const handleLogin = async () => {
+    if (username.trim() && password.trim()) {
       try {
         const response = await fetch("http://localhost:4000/api/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ name, password }),
+          body: JSON.stringify({ name: username, password }),
         });
 
         const data: ServerResponse = await response.json();
 
         if (response.ok) {
-          navigate(`/welcome/${encodeURIComponent(name)}`, {
+          navigate(`/welcome/${encodeURIComponent(username)}`, {
             state: { message: data.message },
           });
         } else {
@@ -42,29 +40,50 @@ const App: React.FC = () => {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
+  };
+
   return (
-    <div className="app-container">
-      <h1 className="app-title">Welcome to Cookie Clicker!</h1>
+    <div className="login-app">
+      <div className="login-container">
+        <div className="login-header">
+          <h1 className="login-title">🍪 Cookie Clicker 🍪</h1>
+          <p className="login-subtitle">Login to start baking!</p>
+        </div>
 
-      <input
-        className="app-input"
-        type="text"
-        placeholder="Enter your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+        <div className="login-form">
+          <div className="input-group">
+            <label className="input-label">Username</label>
+            <input
+              className="login-input"
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+          </div>
 
-      <input
-        className="app-input"
-        type="password"
-        placeholder="Enter your password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+          <div className="input-group">
+            <label className="input-label">Password</label>
+            <input
+              className="login-input"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+          </div>
 
-      <button className="go-button" onClick={handleWelcome}>
-        Go
-      </button>
+          <button className="login-button" onClick={handleLogin}>
+            Start Playing
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

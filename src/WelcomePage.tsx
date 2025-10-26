@@ -1,14 +1,24 @@
 import React, { Component } from "react";
 import { NavigateFunction } from "react-router-dom";
-import "./WelcomePage.css"; // use your cookie-clicker CSS for the welcome page
-const cookieImage = "/cookie.png"; // public folder (Vite) — change if you keep it elsewhere
+import "./WelcomePage.css"; 
+const cookieImage = "/cookie.png";
+
+const buildingImages = {
+  cursor: "https://images.unsplash.com/flagged/photo-1562599838-8cc871c241a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjdXJzb3IlMjBwb2ludGVyfGVufDF8fHx8MTc2MTI1NTIwNHww&ixlib=rb-4.1.0&q=80&w=1080",
+  grandma: "https://images.unsplash.com/photo-1577048982761-cfe6df488c27?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFuZG1vdGhlciUyMGJha2luZ3xlbnwxfHx8fDE3NjEyNTUyMDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+  pirate: "https://images.unsplash.com/photo-1508094902356-db488e227d75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaXJhdGUlMjBzaGlwfGVufDF8fHx8MTc2MTI1NTIwN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+  ninja: "https://images.unsplash.com/photo-1620747918218-0d99c4bf8647?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuaW5qYSUyMHdhcnJpb3J8ZW58MXx8fHwxNzYxMTYyNjE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+  wizard: "https://images.unsplash.com/photo-1494389945381-0fe114b8ea4b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aXphcmQlMjBtYWdpY3xlbnwxfHx8fDE3NjEyNTUyMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+  alien: "https://images.unsplash.com/photo-1604916851289-390266e08c07?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbGllbiUyMHNwYWNlc2hpcHxlbnwxfHx8fDE3NjEyNTUyMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+  cyborg: "https://images.unsplash.com/photo-1495512446763-b2bdc445b4db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjeWJvcmclMjByb2JvdHxlbnwxfHx8fDE3NjEyNTUyMDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+  dragon: "https://images.unsplash.com/photo-1610926597998-fc7f2c1b89b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBmYW50YXN5fGVufDF8fHx8MTc2MTI0MjU5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+};
 
 interface WelcomePageProps {
   navigate: NavigateFunction;
   name?: string;
 }
 
-// Full typed state that exactly matches your original JS state keys and values
 interface WelcomeState {
   totalCookies: number;
   cookiesPerClick: number;
@@ -107,7 +117,6 @@ interface WelcomeState {
 }
 
 class WelcomePage extends Component<WelcomePageProps, WelcomeState> {
-  // environment-safe interval type
   private interval: ReturnType<typeof setInterval> | null = null;
 
   constructor(props: WelcomePageProps) {
@@ -245,16 +254,13 @@ private getBuildingsMemory = async () => {
     if (!res.ok) throw new Error("Failed to fetch buildings");
     const data = await res.json();
 
-    // Calculate total cookies per second
     const cookiesPerSecond = data.reduce((sum: number, b: any) => sum + b.amount * b.baseRate, 0);
 
-    // Prepare new state object
     const newState: Partial<WelcomeState> = {
       buildings: data,
       cookiesPerSecond,
     };
 
-    // Map each building type to its state keys
     const totalMap: Record<string, keyof WelcomeState> = {
       cursor: "totalCursors",
       grandma: "totalGrandmas",
@@ -288,7 +294,6 @@ private getBuildingsMemory = async () => {
       dragon: "dragonCookiesPerSecond",
     };
 
-    // Update totals, prices, and cps per building
     data.forEach((b: any) => {
       const type = b.type.toLowerCase();
       if (totalMap[type]) newState[totalMap[type]] = b.amount;
@@ -342,14 +347,12 @@ handleCookieClick = () => {
 };
 
 
-  // Buildings buy methods
   buyCursor = async (e: React.MouseEvent) => {
   e.preventDefault();
   const { totalCookies, cursorPrice, cursorCookiesPerSecond, buildings } = this.state;
 
   if (totalCookies < cursorPrice) return;
 
-  // Find existing cursor building
   const existing = buildings.find((b) => b.type === "cursor");
 
   let updatedBuildings;
@@ -358,36 +361,33 @@ handleCookieClick = () => {
   if (existing) {
     newAmount = existing.amount + 1;
 
-    // Update building: increment amount and set next basePrice
     updatedBuildings = buildings.map((b) =>
       b.type === "cursor"
         ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(cursorPrice * 1.17) }
         : b
     );
   } else {
-    // First cursor purchase
     updatedBuildings = [
       ...buildings,
       {
         type: "cursor",
         amount: 1,
         purchased: true,
-        basePrice: Math.round(cursorPrice * 1.17), // store next price immediately
+        basePrice: Math.round(cursorPrice * 1.17), 
         baseRate: cursorCookiesPerSecond,
       },
     ];
   }
 
-  // Update state
   this.setState(
     (prevState) => ({
       totalCursors: prevState.totalCursors + 1,
       totalCookies: prevState.totalCookies - cursorPrice,
       cookiesPerSecond: prevState.cookiesPerSecond + cursorCookiesPerSecond,
-      cursorPrice: Math.round(cursorPrice * 1.17), // update UI to next price
+      cursorPrice: Math.round(cursorPrice * 1.17), 
       buildings: updatedBuildings,
     }),
-    this.updateBuildingsMemory // save cumulative state to Prisma
+    this.updateBuildingsMemory
   );
 };
 
@@ -406,36 +406,33 @@ handleCookieClick = () => {
     if (existing) {
       newAmount = existing.amount + 1;
 
-      // Update building: increment amount and set next basePrice
       updatedBuildings = buildings.map((b) =>
         b.type === "grandma"
           ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(grandmaPrice * 1.17) }
           : b
       );
     } else {
-      // First grandma purchase
       updatedBuildings = [
         ...buildings,
         {
           type: "grandma",
           amount: 1,
           purchased: true,
-          basePrice: Math.round(grandmaPrice * 1.17), // store next price immediately
+          basePrice: Math.round(grandmaPrice * 1.17),
           baseRate: grandmaCookiesPerSecond,
         },
       ];
     }
 
-    // Update state
     this.setState(
       (prevState) => ({
         totalGrandmas: prevState.totalGrandmas + 1,
         totalCookies: prevState.totalCookies - grandmaPrice,
         cookiesPerSecond: prevState.cookiesPerSecond + grandmaCookiesPerSecond,
-        grandmaPrice: Math.round(grandmaPrice * 1.17), // update UI to next price
+        grandmaPrice: Math.round(grandmaPrice * 1.17),
         buildings: updatedBuildings,
       }),
-      this.updateBuildingsMemory // save cumulative state to Prisma
+      this.updateBuildingsMemory
     );
   };
 
@@ -453,36 +450,33 @@ handleCookieClick = () => {
     if (existing) {
       newAmount = existing.amount + 1;
 
-      // Update building: increment amount and set next basePrice
       updatedBuildings = buildings.map((b) =>
         b.type === "pirate"
           ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(piratePrice * 1.17) }
           : b
       );
     } else {
-      // First pirate purchase
       updatedBuildings = [
         ...buildings,
         {
           type: "pirate",
           amount: 1,
           purchased: true,
-          basePrice: Math.round(piratePrice * 1.17), // store next price immediately
+          basePrice: Math.round(piratePrice * 1.17),
           baseRate: pirateCookiesPerSecond,
         },
       ];
     }
 
-    // Update state
     this.setState(
       (prevState) => ({
         totalPirates: prevState.totalPirates + 1,
         totalCookies: prevState.totalCookies - piratePrice,
         cookiesPerSecond: prevState.cookiesPerSecond + pirateCookiesPerSecond,
-        piratePrice: Math.round(piratePrice * 1.17), // update UI to next price
+        piratePrice: Math.round(piratePrice * 1.17),
         buildings: updatedBuildings,
       }),
-      this.updateBuildingsMemory // save cumulative state to Prisma
+      this.updateBuildingsMemory
     );
   };
 
@@ -500,36 +494,33 @@ handleCookieClick = () => {
     if (existing) {
       newAmount = existing.amount + 1;
 
-      // Update building: increment amount and set next basePrice
       updatedBuildings = buildings.map((b) =>
         b.type === "ninja"
           ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(ninjaPrice * 1.17) }
           : b
       );
     } else {
-      // First ninja purchase
       updatedBuildings = [
         ...buildings,
         {
           type: "ninja",
           amount: 1,
           purchased: true,
-          basePrice: Math.round(ninjaPrice * 1.17), // store next price immediately
+          basePrice: Math.round(ninjaPrice * 1.17),
           baseRate: ninjaCookiesPerSecond,
         },
       ];
     }
 
-    // Update state
     this.setState(
       (prevState) => ({
         totalNinjas: prevState.totalNinjas + 1,
         totalCookies: prevState.totalCookies - ninjaPrice,
         cookiesPerSecond: prevState.cookiesPerSecond + ninjaCookiesPerSecond,
-        ninjaPrice: Math.round(ninjaPrice * 1.17), // update UI to next price
+        ninjaPrice: Math.round(ninjaPrice * 1.17), 
         buildings: updatedBuildings,
       }),
-      this.updateBuildingsMemory // save cumulative state to Prisma
+      this.updateBuildingsMemory
     );
   };
 
@@ -547,35 +538,32 @@ handleCookieClick = () => {
 
     if (existing) {
       newAmount = existing.amount + 1;
-      // Update building: increment amount and set next basePrice
       updatedBuildings = buildings.map((b) =>
         b.type === "wizard"
           ? { ...b, amount: newAmount, purchased: true, basePrice: Math.round(wizardPrice * 1.17) }
           : b
       );
     } else {
-      // First wizard purchase
       updatedBuildings = [
         ...buildings,
         {
           type: "wizard",
           amount: 1,
           purchased: true,
-          basePrice: Math.round(wizardPrice * 1.17), // store next price immediately
+          basePrice: Math.round(wizardPrice * 1.17),
           baseRate: wizardCookiesPerSecond,
         },
       ];
     }
-    // Update state
     this.setState(
       (prevState) => ({
         totalWizards: prevState.totalWizards + 1,
         totalCookies: prevState.totalCookies - wizardPrice,
         cookiesPerSecond: prevState.cookiesPerSecond + wizardCookiesPerSecond,
-        wizardPrice: Math.round(wizardPrice * 1.17), // update UI to next price
+        wizardPrice: Math.round(wizardPrice * 1.17),
         buildings: updatedBuildings,
       }),
-      this.updateBuildingsMemory // save cumulative state to Prisma
+      this.updateBuildingsMemory
     );
   };
 
@@ -706,7 +694,6 @@ handleCookieClick = () => {
   };
 
 
-  // ---- Upgrades (clicker) ----
   buyClicker1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.clicker1UpgradePrice && !this.state.clicker1UpgradePurchased) {
@@ -842,7 +829,6 @@ handleCookieClick = () => {
     }
   };
 
-  // ---- Pirate Upgrades ----
   buyPirate1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.pirate1UpgradePrice && !this.state.pirate1UpgradePurchased) {
@@ -899,7 +885,6 @@ handleCookieClick = () => {
     }
   };
 
-  // ---- Ninja Upgrades ----
   buyNinja1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.ninja1UpgradePrice && !this.state.ninja1UpgradePurchased) {
@@ -942,7 +927,6 @@ handleCookieClick = () => {
     }
   };
 
-  // ---- Wizard Upgrades ----
   buyWizard1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.wizard1UpgradePrice && !this.state.wizard1UpgradePurchased) {
@@ -985,7 +969,6 @@ handleCookieClick = () => {
     }
   };
 
-  // ---- Alien Upgrades ----
   buyAlien1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.alien1UpgradePrice && !this.state.alien1UpgradePurchased) {
@@ -1014,7 +997,6 @@ handleCookieClick = () => {
     }
   };
 
-  // ---- Cyborg Upgrades ----
   buyCyborg1Upgrade = (e: React.MouseEvent) => {
     e.preventDefault();
     if (this.state.totalCookies >= this.state.cyborg1UpgradePrice && !this.state.cyborg1UpgradePurchased) {
@@ -1029,7 +1011,6 @@ handleCookieClick = () => {
     }
   };
 
-  // helper: update CPS accumulation every second
   updateCookiesPerSecond = () => {
     this.setState((prevState) => ({
       totalCookies: prevState.totalCookies + prevState.cookiesPerSecond,
@@ -1038,7 +1019,6 @@ handleCookieClick = () => {
 );
   };
 
-  // method to handle clicking items (mirrors original)
   handleItemClick = (e: React.MouseEvent, type: string) => {
     e.preventDefault();
     if (type === "cursor") {
@@ -1061,223 +1041,257 @@ handleCookieClick = () => {
   };
 
   render() {
-  return (
-    <div className="App">
-      <div className="container">
-        {/* Column 1 */}
-        <div className="column1">
-          {/* Top Section: Welcome Text */}
-          <div className="welcome-text" onMouseDown={(e) => e.preventDefault()}>
-            <h1>Welcome to Cookie Clicker!</h1>
-          </div>
-
-          {/* Middle Section: Cookie Image */}
-          <div className="image-container">
-            <img
-              src={cookieImage}
-              alt="cookie"
-              className="image"
-              onClick={this.handleCookieClick}
-            />
-          </div>
-
-          {/* Bottom Section: Total Cookies and CPS */}
-          <div className="game-info" onMouseDown={(e) => e.preventDefault()}>
-            <p>Total Cookies:</p>
-            <p>{Math.round(this.state.totalCookies)}</p>
-            <p>Cookies Per Second:</p>
-            <p>{Math.round(this.state.cookiesPerSecond)}</p>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="divider"></div>
-
-        {/* Column 2: Combined Buildings and Upgrades */}
-        <div className="column2">
-          {/* Toggle Button */}
-          <div className="toggle-container">
-            <button
-              className={`toggle-button ${
-                this.state.activeTab === "buildings" ? "active" : ""
-              }`}
-              onClick={() => this.setState({ activeTab: "buildings" })}
-            >
-              Buildings
-            </button>
-            <button
-              className={`toggle-button ${
-                this.state.activeTab === "upgrades" ? "active" : ""
-              }`}
-              onClick={() => this.setState({ activeTab: "upgrades" })}
-            >
-              Upgrades
-            </button>
-          </div>
-
-          {/* Display Buildings or Upgrades */}
-          {this.state.activeTab === "buildings" && (
-            <div className="buildings">
-              {[
-                { key: "cursor", name: "Cursors", price: "cursorPrice", owned: "totalCursors" },
-                { key: "grandma", name: "Grandmas", price: "grandmaPrice", owned: "totalGrandmas" },
-                { key: "pirate", name: "Pirates", price: "piratePrice", owned: "totalPirates" },
-                { key: "ninja", name: "Ninjas", price: "ninjaPrice", owned: "totalNinjas" },
-                { key: "wizard", name: "Wizards", price: "wizardPrice", owned: "totalWizards" },
-                { key: "alien", name: "Aliens", price: "alienPrice", owned: "totalAliens" },
-                { key: "cyborg", name: "Cyborgs", price: "cyborgPrice", owned: "totalCyborgs" },
-                { key: "dragon", name: "Dragons", price: "dragonPrice", owned: "totalDragons" },
-              ].map(({ key, name, price, owned }) => {
-                const priceVal = this.state[price as keyof WelcomeState] as number;
-                const ownedVal = this.state[owned as keyof WelcomeState] as number;
-                return (
-                  <div
-                    key={key}
-                    className="item"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => this.handleItemClick(e, key)}
-                  >
-                    <p>{name}</p>
-                    <div className="price-container">
-                      <span>{priceVal} </span>
-                      <img src={cookieImage} alt="Cookie" className="inline-icon" />
-                    </div>
-                    <p>Owned: {ownedVal}</p>
-                  </div>
-                );
-              })}
+    return (
+      <div className="App">
+        <div className="container">
+          {/* Column 1 */}
+          <div className="column1">
+            {/* Top Section: Welcome Text */}
+            <div className="welcome-text" onMouseDown={(e) => e.preventDefault()}>
+              <h1>🍪 Cookie Clicker 🍪</h1>
             </div>
-          )}
 
-          {this.state.activeTab === "upgrades" && (
-            <div className="upgrades">
-              {[
-                { category: "clicker", count: 6 },
-                { category: "grandma", count: 4 },
-                { category: "pirate", count: 4 },
-                { category: "ninja", count: 3 },
-                { category: "wizard", count: 3 },
-                { category: "alien", count: 2 },
-                { category: "cyborg", count: 1 },
-              ].map(({ category, count }) =>
-                [...Array(count).keys()].map((i) => {
-                  const upgradeNumber = i + 1;
-                  const purchasedKey = `${category}${upgradeNumber}UpgradePurchased` as keyof WelcomeState;
-                  const priceKey = `${category}${upgradeNumber}UpgradePrice` as keyof WelcomeState;
-                  const upgradePurchased = this.state[purchasedKey] as boolean;
-                  const upgradePrice = this.state[priceKey] as number;
-                  const prevPurchasedKey =
-                    upgradeNumber === 1
-                      ? null
-                      : (`${category}${upgradeNumber - 1}UpgradePurchased` as keyof WelcomeState);
-                  const previousUpgradePurchased =
-                    upgradeNumber === 1 ||
-                    (prevPurchasedKey ? (this.state[prevPurchasedKey] as boolean) : false);
+            {/* Middle Section: Cookie Image */}
+            <div className="image-container">
+              <div className="cookie-glow"></div>
+              <img
+                src={cookieImage}
+                alt="cookie"
+                className="image"
+                onClick={this.handleCookieClick}
+              />
+            </div>
 
-                  if (!upgradePurchased && previousUpgradePurchased) {
-                    const methodName = `buy${
-                      category.charAt(0).toUpperCase() + category.slice(1)
-                    }${upgradeNumber}Upgrade`;
-                    const handler = (this as any)[methodName] as
-                      | ((e: React.MouseEvent) => void)
-                      | undefined;
-                    return (
-                      <div
-                        className="item"
-                        key={`${category}-${upgradeNumber}`}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={handler ? handler : undefined}
-                      >
-                        <p>
-                          {category.charAt(0).toUpperCase() + category.slice(1)} {upgradeNumber}
-                        </p>
-                        <div className="price-container">
-                          <span>{upgradePrice} </span>
-                          <img src={cookieImage} alt="Cookie" className="inline-icon" />
-                        </div>
+            {/* Bottom Section: Total Cookies and CPS */}
+            <div className="game-info" onMouseDown={(e) => e.preventDefault()}>
+              <div className="stat-row">
+                <span className="stat-label">🍪 Total Cookies</span>
+                <span className="stat-value">{Math.round(this.state.totalCookies).toLocaleString()}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">⚡ Per Second</span>
+                <span className="stat-value">{Math.round(this.state.cookiesPerSecond).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="divider"></div>
+
+          {/* Column 2: Combined Buildings and Upgrades */}
+          <div className="column2">
+            {/* Toggle Button */}
+            <div className="toggle-container">
+              <button
+                className={`toggle-button ${
+                  this.state.activeTab === "buildings" ? "active" : ""
+                }`}
+                onClick={() => this.setState({ activeTab: "buildings" })}
+              >
+                🏢 Buildings
+              </button>
+              <button
+                className={`toggle-button ${
+                  this.state.activeTab === "upgrades" ? "active" : ""
+                }`}
+                onClick={() => this.setState({ activeTab: "upgrades" })}
+              >
+                ⭐ Upgrades
+              </button>
+            </div>
+
+            {/* Display Buildings or Upgrades */}
+            {this.state.activeTab === "buildings" && (
+              <div className="buildings">
+                {[
+                  { key: "cursor", name: "Cursors", price: "cursorPrice", owned: "totalCursors" },
+                  { key: "grandma", name: "Grandmas", price: "grandmaPrice", owned: "totalGrandmas" },
+                  { key: "pirate", name: "Pirates", price: "piratePrice", owned: "totalPirates" },
+                  { key: "ninja", name: "Ninjas", price: "ninjaPrice", owned: "totalNinjas" },
+                  { key: "wizard", name: "Wizards", price: "wizardPrice", owned: "totalWizards" },
+                  { key: "alien", name: "Aliens", price: "alienPrice", owned: "totalAliens" },
+                  { key: "cyborg", name: "Cyborgs", price: "cyborgPrice", owned: "totalCyborgs" },
+                  { key: "dragon", name: "Dragons", price: "dragonPrice", owned: "totalDragons" },
+                ].map(({ key, name, price, owned }) => {
+                  const priceVal = this.state[price as keyof WelcomeState] as number;
+                  const ownedVal = this.state[owned as keyof WelcomeState] as number;
+                  const canAfford = this.state.totalCookies >= priceVal;
+                  return (
+                    <div
+                      key={key}
+                      className={`item building-item ${canAfford ? 'can-afford' : 'cant-afford'}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => this.handleItemClick(e, key)}
+                    >
+                      <div className="item-image">
+                        <img src={buildingImages[key as keyof typeof buildingImages]} alt={name} />
                       </div>
-                    );
-                  }
+                      <div className="item-details">
+                        <div className="item-name">{name}</div>
+                        <div className="price-container">
+                          <span className="price-value">{priceVal.toLocaleString()}</span>
+                          <span className="cookie-icon">🍪</span>
+                        </div>
+                        <div className="owned-count">Owned: {ownedVal}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-                  return null;
-                })
-              )}
+            {this.state.activeTab === "upgrades" && (
+              <div className="upgrades">
+                {[
+                  { category: "clicker", count: 6 },
+                  { category: "grandma", count: 4 },
+                  { category: "pirate", count: 4 },
+                  { category: "ninja", count: 3 },
+                  { category: "wizard", count: 3 },
+                  { category: "alien", count: 2 },
+                  { category: "cyborg", count: 1 },
+                ].map(({ category, count }) =>
+                  [...Array(count).keys()].map((i) => {
+                    const upgradeNumber = i + 1;
+                    const purchasedKey = `${category}${upgradeNumber}UpgradePurchased` as keyof WelcomeState;
+                    const priceKey = `${category}${upgradeNumber}UpgradePrice` as keyof WelcomeState;
+                    const upgradePurchased = this.state[purchasedKey] as boolean;
+                    const upgradePrice = this.state[priceKey] as number;
+                    const prevPurchasedKey =
+                      upgradeNumber === 1
+                        ? null
+                        : (`${category}${upgradeNumber - 1}UpgradePurchased` as keyof WelcomeState);
+                    const previousUpgradePurchased =
+                      upgradeNumber === 1 ||
+                      (prevPurchasedKey ? (this.state[prevPurchasedKey] as boolean) : false);
+
+                    if (!upgradePurchased && previousUpgradePurchased) {
+                      const methodName = `buy${
+                        category.charAt(0).toUpperCase() + category.slice(1)
+                      }${upgradeNumber}Upgrade`;
+                      const handler = (this as any)[methodName] as
+                        | ((e: React.MouseEvent) => void)
+                        | undefined;
+                      const canAfford = this.state.totalCookies >= upgradePrice;
+                      // Map category to building image
+                      const imageKey = category === "clicker" ? "cursor" : category;
+                      return (
+                        <div
+                          className={`item upgrade-item ${canAfford ? 'can-afford' : 'cant-afford'}`}
+                          key={`${category}-${upgradeNumber}`}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={handler ? handler : undefined}
+                        >
+                          <div className="item-image upgrade-badge">
+                            <img
+                              src={buildingImages[imageKey as keyof typeof buildingImages]} 
+                              alt={category} 
+                            />
+                            <div className="upgrade-tier">Lv.{upgradeNumber}</div>
+                          </div>
+                          <div className="item-details">
+                            <div className="item-name">
+                              {category.charAt(0).toUpperCase() + category.slice(1)} Upgrade
+                            </div>
+                            <div className="price-container">
+                              <span className="price-value">{upgradePrice.toLocaleString()}</span>
+                              <span className="cookie-icon">🍪</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="divider"></div>
+
+          {/* Column 3: Stats and Updates */}
+          <div className="column3">
+            {/*toggle button*/}
+            <div className="toggle-container">
+              <button
+                className={`toggle-button ${
+                  this.state.activeSecondaryTab === "stats" ? "active" : ""
+                }`}
+                onClick={() => this.setState({ activeSecondaryTab: "stats" })}
+              >
+                📊 Stats
+              </button>
+              <button
+                className={`toggle-button ${
+                  this.state.activeSecondaryTab === "updates" ? "active" : ""
+                }`}
+                onClick={() => this.setState({ activeSecondaryTab: "updates" })}
+              >
+                📰 Updates
+              </button>
             </div>
-          )}
-        </div>
+            
+            {this.state.activeSecondaryTab === "stats" && (
+              <div className="stats-info">
+                <div className="stat-item">
+                  <span className="stat-icon">👆</span>
+                  <span>Cookies Per Click: <strong>{this.state.cookiesPerClick}</strong></span>
+                </div>
+                <div className="stat-section-title">🏢 Buildings Unlocked</div>
+                <div className="unlocked-buildings">
+                  {this.state.totalCursors > 0 && (
+                    <div className="unlocked-item">✓ Cursor</div>
+                  )}
+                  {this.state.totalGrandmas > 0 && (
+                    <div className="unlocked-item">✓ Grandma</div>
+                  )}
+                  {this.state.totalPirates > 0 && (
+                    <div className="unlocked-item">✓ Pirate</div>
+                  )}
+                  {this.state.totalNinjas > 0 && (
+                    <div className="unlocked-item">✓ Ninja</div>
+                  )}
+                  {this.state.totalWizards > 0 && (
+                    <div className="unlocked-item">✓ Wizard</div>
+                  )}
+                  {this.state.totalAliens > 0 && (
+                    <div className="unlocked-item">✓ Alien</div>
+                  )}
+                  {this.state.totalCyborgs > 0 && (
+                    <div className="unlocked-item">✓ Cyborg</div>
+                  )}
+                  {this.state.totalDragons > 0 && (
+                    <div className="unlocked-item">✓ Dragon</div>
+                  )}
+                </div>
+              </div>
+            )}
 
-        {/* Divider */}
-        <div className="divider"></div>
+            {this.state.activeSecondaryTab === "updates" && (
+              <div className="updates-info">
+                <div className="update-section">
+                  <div className="update-title">🎉 Latest Updates!</div>
+                  <div className="update-text">Building progress now stored in memory even when you log out!</div>
+                </div>
+                <div className="update-section">
+                  <div className="update-title">🔮 Upcoming Updates!</div>
+                  <div className="update-text">Storing all your upgrades even when you log out!</div>
+                </div>
+              </div>
+            )}
 
-        {/* Column 3: Stats and Updates */}
-        <div className="column3">
-          {/*toggle button*/}
-          <div className="toggle-container">
-            <button
-              className={`toggle-button ${
-                this.state.activeSecondaryTab === "stats" ? "active" : ""
-              }`}
-              onClick={() => this.setState({ activeSecondaryTab: "stats" })}
-            >
-              Stats
-            </button>
-            <button
-              className={`toggle-button ${
-                this.state.activeSecondaryTab === "updates" ? "active" : ""
-              }`}
-              onClick={() => this.setState({ activeSecondaryTab: "updates" })}
-            >
-              Updates
+            {/*logout button*/}
+            <button className="logout-button" onClick={this.handleLogout}>
+              🚪 Logout
             </button>
           </div>
-          
-          {this.state.activeSecondaryTab === "stats" && (
-            <div className="stats-info">
-              <p>Cookies Per Click: {this.state.cookiesPerClick}</p>
-              <p>Buildings Unlocked:</p>
-              {this.state.totalCursors > 0 && (
-                <p>Cursor</p>
-              )}
-              {this.state.totalGrandmas > 0 && (
-                <p>Grandma</p>
-              )}
-              {this.state.totalPirates > 0 && (
-                <p>Pirate</p>
-              )}
-              {this.state.totalNinjas > 0 && (
-                <p>Ninja</p>
-              )}
-              {this.state.totalWizards > 0 && (
-                <p>Wizard</p>
-              )}
-              {this.state.totalAliens > 0 && (
-                <p>Alien</p>
-              )}
-              {this.state.totalCyborgs > 0 && (
-                <p>Cyborg</p>
-              )}
-              {this.state.totalDragons > 0 && (
-                <p>Dragon</p>
-              )}
-            </div>
-          )}
-
-          {this.state.activeSecondaryTab === "updates" && (
-            <div className="updates-info">
-              <p>Latest Updates!</p>
-              <p>Building progress now stored in memory even when you log out!</p>
-              <p>Upcoming Updates!</p>
-              <p>Storing all your upgrades even when you log out!</p>
-            </div>
-          )}
-
-          {/*logout button*/}
-          <button className="logout-button" onClick={this.handleLogout}>Logout</button>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 }
 
 
